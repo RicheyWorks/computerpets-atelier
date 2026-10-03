@@ -1,30 +1,36 @@
 # Atelier
 
-**Generative Asset Maker** — AI tool that generates unique 2D/3D art for new NFT traits without breaking the 210-kind canon.
+**Trait art that stays true to each species.**
 
-Part of [ComputerPets](https://github.com/RicheyWorks/computerpets). Map: [computerpets-ecosystem](https://github.com/RicheyWorks/computerpets-ecosystem).
+A planned asset-generation service for artists, with species silhouette checks before artwork reaches the minting workflow.
 
-| | |
+**Stage: design scaffold.** This checkout contains a design document and a source placeholder. The experience below is planned; there is no runnable app or integrated service yet.
+
+[Status](#status) · [Planned experience](#planned-experience) · [Contributor quickstart](#contributor-quickstart) · [Service contract](docs/CONTRACT.md) · [Ecosystem map](https://github.com/RicheyWorks/computerpets-ecosystem)
+
+## Status
+
+| Available today | What you can inspect |
 | --- | --- |
-| Status | Design scaffold — contract frozen, implementation next |
-| License | MIT |
-| First pet | Still [Rui on the desktop](https://github.com/RicheyWorks/computerpets/blob/main/docs/START-HERE.md). This organ is optional. |
+| [Service contract](docs/CONTRACT.md) | Intended behavior, boundaries, and planned dependencies. |
+| [Source placeholder](src/atelier/__init__.py) | Package metadata at version 0.0.0; no application entry point or packaging manifest is checked in. |
+| [MIT license](LICENSE) | Licensing terms for the repository. |
 
-## The job
+Gameplay, endpoints, integration arrows, and failure handling on this page describe implementation targets. No build/test harness, CI workflow, or product screenshots are included in this scaffold.
 
-New hats, scars, and morphs must still read as ComputerPets. Atelier is gated by the species sheet so a red panda never grows a fish tail by accident.
+## Planned experience
 
-The flagship overlay already puts a living sticker on the real desktop (Rui first, 210 kinds). Atelier does not replace that. It is one organ.
+- POST /v1/generate — prompt + species lock + trait slot → PNG + metadata
+- POST /v1/critique — reject if it violates the species silhouette
+- GET /v1/slots/{speciesId} — legal trait slots (hat, mark, color, accessory)
 
-## Who uses it
+### Planned technology
 
-Studio artists and operators. Players use Studio, not this GPU box.
+Python 3.12 · diffusion (SDXL / Flux) · ControlNet pose · trait JSON schema · S3-compatible asset store
 
-## What it is not
+### Planned connections
 
-Not an open prompt box. Species silhouette is a gate, not a suggestion.
-
-## Architecture
+These arrows show intended dependencies, rather than working integrations.
 
 ```mermaid
 flowchart LR
@@ -33,81 +39,47 @@ flowchart LR
   atelier -->|png+meta| minter
 ```
 
-## Stack
+## Contributor quickstart
 
-Python 3.12 · diffusion (SDXL / Flux) · ControlNet pose · trait JSON schema · S3-compatible asset store
+With access to this private repository, Git and PowerShell are enough to review the scaffold:
 
-GroupId / namespace: `com.enterprisepet.atelier`  
-Default listen: `8094`
+```powershell
+git clone https://github.com/RicheyWorks/computerpets-atelier.git
+Set-Location computerpets-atelier
+Get-Content docs/CONTRACT.md
+Get-Content src/atelier/__init__.py
+```
 
-## Contract
+Read [Service contract](docs/CONTRACT.md) before choosing implementation details. The commands above inspect the checked-in files; app installation, editor launch, and server startup become possible after a buildable project and entry point are added.
 
-### Data
-
-`TraitSlot(id, zIndex, mask) · Candidate(png, seed, score) · CanonGate(pass|fail, reasons[])`
-
-### Surface
-
-- POST /v1/generate — prompt + species lock + trait slot → PNG + metadata
-- POST /v1/critique — reject if it violates the species silhouette
-- GET /v1/slots/{speciesId} — legal trait slots (hat, mark, color, accessory)
-
-### Failure doctrine
-
-Canon fail → do not upload. GPU OOM → smaller batch. NSFW filter trip → discard, log, no retry of the same seed.
-
-## First slice
-
-Build this and stop. Do not boil the ocean.
+### First implementation target
 
 **Hat slot for Rui, ControlNet pose from Motion rest, canon critic that can fail the job.**
 
 You know it works when: Panda-fish prompt fails closed. NSFW discarded, seed logged, no retry of that seed.
 
-## Environment
+Treat this as an acceptance target for a future implementation. Start with the documented slice, add the required project setup and focused tests, and update these instructions with commands that work from a fresh clone.
 
-`HF_TOKEN`, `ASSET_BUCKET`, `CANON_URL`
+## Design boundaries
 
-Never commit secrets. Never put Steam or chain keys in the overlay.
+- Stay canon with 210 species. No illegal hybrids. No swapped voices.
+- Treat the desktop overlay as the main quest. This organ is optional until wired.
+- Fail soft: the overlay keeps walking if this service is down, unless this *is* the overlay.
+- No PII in public artifacts (Steam id, wallet, home path, webcam frames).
 
-## Neighbors
+**Required failure behavior:**
 
-- computerpets-bazaar (list traits)
-- computerpets-minter (pin + mint)
-- computerpets-studio (human in the loop)
-- computerpets-lore (canon checks)
+Canon fail → do not upload. GPU OOM → smaller batch. NSFW filter trip → discard, log, no retry of the same seed.
 
-## Layout
+## Ecosystem
 
-```
-computerpets-atelier/
-  README.md           this file
-  LICENSE             MIT
-  docs/CONTRACT.md    the same contract, frozen for implementers
-  src/                implementation lands here
-```
+- [computerpets-bazaar](https://github.com/RicheyWorks/computerpets-bazaar) (list traits)
+- [computerpets-minter](https://github.com/RicheyWorks/computerpets-minter) (pin + mint)
+- [computerpets-studio](https://github.com/RicheyWorks/computerpets-studio) (human in the loop)
+- [computerpets-lore](https://github.com/RicheyWorks/computerpets-lore) (canon checks)
 
-## Run (Windows)
-
-PowerShell, from this folder, after the flagship helpers (Git, Node LTS 22+, JDK 21 as needed):
-
-```powershell
-python -m venv .venv; pip install -e .; python -m atelier.cli generate --species rui --slot hat
-```
-
-You do not need this service to meet Rui. The [flagship start-here](https://github.com/RicheyWorks/computerpets/blob/main/docs/START-HERE.md) is still the first pet.
-
-## Links
-
-- Flagship: [RicheyWorks/computerpets](https://github.com/RicheyWorks/computerpets)
-- This repo: [RicheyWorks/computerpets-atelier](https://github.com/RicheyWorks/computerpets-atelier)
-- Map: [RicheyWorks/computerpets-ecosystem](https://github.com/RicheyWorks/computerpets-ecosystem)
-- Contract file: [docs/CONTRACT.md](docs/CONTRACT.md)
+Start with the [ComputerPets flagship](https://github.com/RicheyWorks/computerpets) for the desktop pet. This repository describes an optional extension; the [ecosystem map](https://github.com/RicheyWorks/computerpets-ecosystem) explains the broader plan.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
----
-
-*Two hundred ten living kinds. Keep them so a line does not go quiet.*
